@@ -4,7 +4,10 @@
 use crate::handlers::{
     auth::{login, logout},
     health::get_health,
-    user::{create_user, delete_user, get_user, get_users, update_user},
+    user::{get_users_by_family_id, create_user, delete_user, get_user, get_users, update_user},
+    family::{create_family, delete_family, get_family, get_families, update_family},
+    place::{get_places_by_family_id, create_place, delete_place, get_place, get_places, update_place},
+    subscription::{get_subscriptions_by_family_id, create_subscription, delete_subscription, get_subscription, get_subscriptions, update_subscription},
 };
 use crate::middleware::auth::Auth as AuthMiddleware;
 use actix_files::Files;
@@ -32,8 +35,38 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("/{id}", web::put().to(update_user))
                         .route("/{id}", web::delete().to(delete_user))
                         .route("", web::get().to(get_users))
-                        .route("", web::post().to(create_user)),
-                ),
+                        .route("", web::post().to(create_user))
+                        .route("/search_by_family/{id}/", web::get().to(get_users_by_family_id)),
+                )
+                // FAMILY routes
+                .service(
+                    web::scope("/family")
+                        .route("/{id}", web::get().to(get_family))
+                        .route("/{id}", web::put().to(update_family))
+                        .route("/{id}", web::delete().to(delete_family))
+                        .route("", web::get().to(get_families))
+                        .route("", web::post().to(create_family)),
+                )
+                // PLACE routes
+                .service(
+                    web::scope("/place")
+                        .route("/{id}", web::get().to(get_place))
+                        .route("/{id}", web::put().to(update_place))
+                        .route("/{id}", web::delete().to(delete_place))
+                        .route("", web::get().to(get_places))
+                        .route("", web::post().to(create_place))
+                        .route("search_by_family/{id}", web::get().to(get_places_by_family_id)),
+                )
+                // Subscription routes
+                .service(
+                    web::scope("/subscription")
+                        .route("/{id}", web::get().to(get_subscription))
+                        .route("/{id}", web::put().to(update_subscription))
+                        .route("/{id}", web::delete().to(delete_subscription))
+                        .route("", web::get().to(get_subscriptions))
+                        .route("", web::post().to(create_subscription))
+                        .route("search_by_family/{id}", web::get().to(get_subscriptions_by_family_id)),
+                )
         )
         // Serve secure static files from the static-private folder
         .service(

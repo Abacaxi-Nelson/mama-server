@@ -1,0 +1,12 @@
+
+CREATE TABLE subscriptions (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  family_id VARCHAR(36) NOT NULL REFERENCES families,
+  place_id VARCHAR(36) NOT NULL REFERENCES places,
+  user_id VARCHAR(36) NOT NULL REFERENCES users,
+  days VARCHAR(7) NOT NULL,
+  created_by VARCHAR(36) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_by VARCHAR(36) NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+)
