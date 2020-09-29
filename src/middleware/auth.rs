@@ -50,7 +50,7 @@ where
         let identity = RequestIdentity::get_identity(&req).unwrap_or("".into());
         let private_claim: Result<PrivateClaim, ApiError> = decode_jwt(&identity);
         let is_logged_in = private_claim.is_ok();
-        let unauthorized = !is_logged_in && req.path() != "/api/v1/auth/login";
+        let unauthorized = !is_logged_in && !dont_need_auth(req.path());
 
         if unauthorized {
             return Box::pin(async move {    
@@ -65,4 +65,9 @@ where
             Ok(res)
         })
     }
+}
+
+fn dont_need_auth(path: &str) -> bool {
+    path == "/api/v1/auth/login" ||
+    path == "/api/v1/user"
 }

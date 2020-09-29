@@ -1,4 +1,3 @@
-use crate::auth::hash;
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse};
