@@ -98,7 +98,9 @@ pub async fn create_user(
     pool: Data<PoolType>,
     params: Json<CreateUserRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
+    println!("create_user");
     validate(&params)?;
+    println!("create_user2");
 
     // temporarily use the new user's id for created_at/updated_at
     // update when auth is added

@@ -5,7 +5,7 @@ use crate::handlers::{
     auth::{login, logout},
     health::get_health,
     user::{get_users_by_family_id, create_user, delete_user, get_user, get_users, update_user},
-    family::{create_family, delete_family, get_family, get_families, update_family},
+    family::{get_family_by_code, create_family, delete_family, get_family, get_families, update_family},
     place::{get_places_by_family_id, create_place, delete_place, get_place, get_places, update_place},
     subscription::{get_subscriptions_by_family_id, create_subscription, delete_subscription, get_subscription, get_subscriptions, update_subscription},
 };
@@ -36,7 +36,7 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("/{id}", web::delete().to(delete_user))
                         .route("", web::get().to(get_users))
                         .route("", web::post().to(create_user))
-                        .route("/search_by_family/{id}/", web::get().to(get_users_by_family_id)),
+                        .route("/search_by_family/{id}", web::get().to(get_users_by_family_id)),
                 )
                 // FAMILY routes
                 .service(
@@ -45,7 +45,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("/{id}", web::put().to(update_family))
                         .route("/{id}", web::delete().to(delete_family))
                         .route("", web::get().to(get_families))
-                        .route("", web::post().to(create_family)),
+                        .route("", web::post().to(create_family))
+                        .route("/search_by_code/{code}", web::get().to(get_family_by_code)),
                 )
                 // PLACE routes
                 .service(

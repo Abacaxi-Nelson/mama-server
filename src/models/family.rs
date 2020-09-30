@@ -45,6 +45,19 @@ pub fn get_all(pool: &PoolType) -> Result<FamiliesResponse, ApiError> {
     Ok(all_families.into())
 }
 
+pub fn find_by_code(pool: &PoolType, _code: &String) -> Result<FamilyResponse, ApiError> {
+    use crate::schema::families::dsl::{code, families};
+
+    let not_found = format!("Family {} not found", _code);
+    let conn = pool.get()?;
+    let family = families
+        .filter(code.eq(_code))
+        .first::<Family>(&conn)
+        .map_err(|_| ApiError::NotFound(not_found))?;
+
+    Ok(family.into())
+}
+
 /// Find a family by the family's id or error out
 pub fn find(pool: &PoolType, family_id: Uuid) -> Result<FamilyResponse, ApiError> {
     use crate::schema::families::dsl::{id, families};

@@ -1,13 +1,14 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::family::{create, delete, find, get_all, update, NewFamily, UpdateFamily, Family};
+use crate::models::family::{find_by_code, create, delete, find, get_all, update, NewFamily, UpdateFamily, Family};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use rayon::prelude::*;
 use serde::Serialize;
 use uuid::Uuid;
 use validator::Validate;
+use rand::Rng;
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct FamilyResponse {
@@ -42,12 +43,6 @@ pub struct CreateFamilyRequest {
         message = "nom is required and must be at least 3 characters"
     ))]
     pub nom: String,
-
-    #[validate(length(
-        min = 3,
-        message = "code is required and must be at least 3 characters"
-    ))]
-    pub code: String,
 }
 
 /// Get a family
@@ -56,6 +51,22 @@ pub async fn get_family(
     pool: Data<PoolType>,
 ) -> Result<Json<FamilyResponse>, ApiError> {
     let family = block(move || find(&pool, *family_id)).await?;
+    respond_json(family)
+}
+
+#[derive(Deserialize)]
+pub struct PathByCode {
+    code: String
+}
+
+pub async fn get_family_by_code(
+    path: Path<PathByCode>,
+    pool: Data<PoolType>,
+) -> Result<Json<FamilyResponse>, ApiError> {
+    println!("get_family_by_code");
+    println!("{:?}", &path.code);
+    let family = block(move || find_by_code(&pool, &path.code)).await?;
+    println!("get_family_by_code 2");
     respond_json(family)
 }
 
@@ -72,11 +83,15 @@ pub async fn create_family(
 ) -> Result<Json<FamilyResponse>, ApiError> {
     validate(&params)?;
 
+    let mut rng = rand::thread_rng();
+    let number: u32 = rng.gen_range(0, 999999);
+    let code = format!("{:06}", number);
+
     let family_id = Uuid::new_v4();
     let new_family: Family = NewFamily{
         id: family_id.to_string(),
         nom: params.nom.to_string(),
-        code: params.code.to_string(),
+        code: code,
         created_by: family_id.to_string(),
         updated_by: family_id.to_string(),
     }
