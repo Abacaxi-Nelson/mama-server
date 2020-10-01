@@ -1,7 +1,7 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::subscription::{get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
+use crate::models::subscription::{get_all_by_family_id_and_user_id_and_days, get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
@@ -42,10 +42,6 @@ pub struct CreateSubscriptionRequest {
     ))]
     pub place_id: String,
 
-    #[validate(length(
-        min = 7,
-        message = "days is required and must be at least 3 characters"
-    ))]
     pub days: String,
 }
 
@@ -69,10 +65,6 @@ pub struct UpdateSubscriptionRequest {
     ))]
     pub place_id: String,
 
-    #[validate(length(
-        min = 7,
-        message = "days is required and must be at least 3 characters"
-    ))]
     pub days: String,
 }
 
@@ -119,10 +111,24 @@ pub struct SubscriptionFilledResponse {
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct SubscriptionsFilledResponse(pub Vec<SubscriptionFilledResponse>);
 
-pub async fn get_subscriptions_by_family_id_and_place_id(path: Path<PathByFamilyIDPlaceID>, pool: Data<PoolType>) -> Result<Json<SubscriptionsFilledResponse>, ApiError> {
+pub async fn get_subscriptions_by_family_id_and_place_id(path: Path<PathByFamilyIDPlaceID>, pool: Data<PoolType>) -> Result<Json<SubscriptionsResponse>, ApiError> {
     println!("get_subscriptions_by_family_id_and_place_id");
     let subscriptions = block(move || get_all_by_family_id_and_place_id(&pool, path.family_id, path.place_id)).await?;
     println!("get_subscriptions_by_family_id_and_place_id 2");
+    respond_json(subscriptions)
+}
+
+#[derive(Deserialize)]
+pub struct PathByFamilyIDUserIDDays {
+    family_id: Uuid,
+    user_id: Uuid,
+    days: String,
+}
+
+pub async fn get_subscriptions_by_family_id_and_user_id_and_days(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsResponse>, ApiError> {
+    println!("get_subscriptions_by_family_id_and_user_id_and_days");
+    let subscriptions = block(move || get_all_by_family_id_and_user_id_and_days(&pool, path.family_id, path.user_id, &path.days)).await?;
+    println!("get_subscriptions_by_family_id_and_user_id_and_days 2");
     respond_json(subscriptions)
 }
 
@@ -151,19 +157,19 @@ pub async fn create_subscription(
 }
 
 pub async fn update_subscription(
-    place_id: Path<Uuid>,
+    sub_id: Path<Uuid>,
     pool: Data<PoolType>,
     params: Json<UpdateSubscriptionRequest>,
 ) -> Result<Json<SubscriptionResponse>, ApiError> {
     validate(&params)?;
 
     let update_subscription= UpdateSubscription{
-        id: place_id.to_string(),
+        id: sub_id.to_string(),
         family_id: params.family_id.to_string(),
         user_id: params.user_id.to_string(),
         place_id: params.place_id.to_string(),
         days: params.days.to_string(),
-        updated_by: place_id.to_string(),
+        updated_by: sub_id.to_string(),
     };
     let subscription = block(move || update(&pool, &update_subscription)).await?;
     respond_json(subscription.into())

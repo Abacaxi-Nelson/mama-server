@@ -70,5 +70,7 @@ where
 fn dont_need_auth(path: &str) -> bool {
     path == "/api/v1/auth/login" ||
     path == "/api/v1/subscription/search_by_family_place/7c372cea-240b-4a68-a076-2d84f426596c/b8405db4-f339-4f8d-82d0-caff997bf154" ||
+    path == "/api/v1/event" ||
+    path == "/api/v1/subscription/search_by_family_user_days/7c372cea-240b-4a68-a076-2d84f426596c/ca0dcfba-7df8-4e7c-bc9f-4b244857081d/lundi"  ||
     path == "/api/v1/user"
 }

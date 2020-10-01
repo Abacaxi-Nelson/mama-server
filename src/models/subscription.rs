@@ -1,10 +1,11 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
-use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse, SubscriptionFilledResponse, SubscriptionsFilledResponse};
+use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse};
 use crate::schema::subscriptions;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
+use crate::models::event::Event;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
 pub struct Subscription {
@@ -41,6 +42,19 @@ pub struct UpdateSubscription {
     pub updated_by: String,
 }
 
+pub fn get_all_by_family_id_and_place_id(pool: &PoolType, _family_id: Uuid, _place_id: Uuid) -> Result<SubscriptionsResponse, ApiError> {
+    use crate::schema::subscriptions::dsl::*;
+
+    println!("funct get_all_by_family_id_and_place_id");
+
+    let conn = pool.get()?;
+    let all = subscriptions
+        .filter(family_id.eq(_family_id.to_string()))
+        .filter(place_id.eq(_place_id.to_string()))
+        .load(&conn)?;
+    Ok(all.into())
+}
+
 pub fn get_all(pool: &PoolType) -> Result<SubscriptionsResponse, ApiError> {
     use crate::schema::subscriptions::dsl::subscriptions;
 
@@ -61,14 +75,28 @@ pub fn get_all_by_family_id(pool: &PoolType, _family_id: Uuid) -> Result<Subscri
     Ok(all.into())
 }
 
-pub fn get_all_by_family_id_and_place_id(pool: &PoolType, _family_id: Uuid, _place_id: Uuid) -> Result<SubscriptionsFilledResponse, ApiError> {
+pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uuid, _user_id: Uuid, _days: &String) -> Result<SubscriptionsResponse, ApiError> {
     use crate::schema::subscriptions::dsl::*;
+    println!("passage get_all_by_family_id_and_user_id_and_days");
+    println!("_family_id {:?} _user_id {:?} _days {:?}", _family_id, _user_id, _days);
+    println!("===========================");
 
     let conn = pool.get()?;
+
+    let mut day = "%".to_string();
+    let d = "%".to_string();
+    day.push_str(_days);
+    day.push_str(&d);
+
+    println!("day {:?} ", day);
+
     let all = subscriptions
         .filter(family_id.eq(_family_id.to_string()))
-        .filter(place_id.eq(_place_id.to_string()))
+        .filter(user_id.eq(_user_id.to_string()))
+        .filter(days.like(day))
         .load(&conn)?;
+
+    //0011000
 
     Ok(all.into())
 }
