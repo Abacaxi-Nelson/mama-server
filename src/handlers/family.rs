@@ -63,10 +63,7 @@ pub async fn get_family_by_code(
     path: Path<PathByCode>,
     pool: Data<PoolType>,
 ) -> Result<Json<FamilyResponse>, ApiError> {
-    println!("get_family_by_code");
-    println!("{:?}", &path.code);
     let family = block(move || find_by_code(&pool, &path.code)).await?;
-    println!("get_family_by_code 2");
     respond_json(family)
 }
 

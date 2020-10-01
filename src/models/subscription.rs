@@ -1,6 +1,6 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
-use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse};
+use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse, SubscriptionFilledResponse, SubscriptionsFilledResponse};
 use crate::schema::subscriptions;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
@@ -61,6 +61,18 @@ pub fn get_all_by_family_id(pool: &PoolType, _family_id: Uuid) -> Result<Subscri
     Ok(all.into())
 }
 
+pub fn get_all_by_family_id_and_place_id(pool: &PoolType, _family_id: Uuid, _place_id: Uuid) -> Result<SubscriptionsFilledResponse, ApiError> {
+    use crate::schema::subscriptions::dsl::*;
+
+    let conn = pool.get()?;
+    let all = subscriptions
+        .filter(family_id.eq(_family_id.to_string()))
+        .filter(place_id.eq(_place_id.to_string()))
+        .load(&conn)?;
+
+    Ok(all.into())
+}
+
 pub fn find(pool: &PoolType, subscription_id: Uuid) -> Result<SubscriptionResponse, ApiError> {
     use crate::schema::subscriptions::dsl::{id, subscriptions};
 
@@ -76,8 +88,8 @@ pub fn find(pool: &PoolType, subscription_id: Uuid) -> Result<SubscriptionRespon
 
 pub fn create(pool: &PoolType, new_subscription: &Subscription) -> Result<SubscriptionResponse, ApiError> {
     use crate::schema::subscriptions::dsl::subscriptions;
-
     let conn = pool.get()?;
+
     diesel::insert_into(subscriptions).values(new_subscription).execute(&conn)?;
     Ok(new_subscription.clone().into())
 }

@@ -1,7 +1,7 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::subscription::{create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
+use crate::models::subscription::{get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
@@ -99,10 +99,40 @@ pub async fn get_subscriptions_by_family_id(path: Path<PathByFamilyID>, pool: Da
     respond_json(subscriptions)
 }
 
+#[derive(Deserialize)]
+pub struct PathByFamilyIDPlaceID {
+    family_id: Uuid,
+    place_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct SubscriptionFilledResponse {
+    pub id: Uuid,
+    pub family_id: Uuid,
+    pub user_id: Uuid,
+    pub user_name: String,
+    pub place_id: Uuid,
+    pub place_name: String,
+    pub days: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct SubscriptionsFilledResponse(pub Vec<SubscriptionFilledResponse>);
+
+pub async fn get_subscriptions_by_family_id_and_place_id(path: Path<PathByFamilyIDPlaceID>, pool: Data<PoolType>) -> Result<Json<SubscriptionsFilledResponse>, ApiError> {
+    println!("get_subscriptions_by_family_id_and_place_id");
+    let subscriptions = block(move || get_all_by_family_id_and_place_id(&pool, path.family_id, path.place_id)).await?;
+    println!("get_subscriptions_by_family_id_and_place_id 2");
+    respond_json(subscriptions)
+}
+
 pub async fn create_subscription(
     pool: Data<PoolType>,
     params: Json<CreateSubscriptionRequest>,
 ) -> Result<Json<SubscriptionResponse>, ApiError> {
+    //println!("create_subscription");
+    //println!("{:?}", params);
+
     validate(&params)?;
 
     let subscription_id = Uuid::new_v4();

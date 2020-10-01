@@ -36,6 +36,9 @@ pub struct ErrorResponse {
 /// Automatically convert ApiErrors to external Response Errors
 impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
+        println!("passage error_response");
+        println!("{:?}", self);
+
         match self {
             ApiError::BadRequest(error) => {
                 HttpResponse::BadRequest().json::<ErrorResponse>(error.into())
@@ -49,6 +52,9 @@ impl ResponseError for ApiError {
             ApiError::Unauthorized(error) => {
                 HttpResponse::Unauthorized().json::<ErrorResponse>(error.into())
             }
+            ApiError::InternalServerError(error) => {
+                HttpResponse::BadRequest().json::<ErrorResponse>(error.into())
+            }
             _ => HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR),
         }
     }
@@ -57,6 +63,8 @@ impl ResponseError for ApiError {
 /// Utility to make transforming a string reference into an ErrorResponse
 impl From<&String> for ErrorResponse {
     fn from(error: &String) -> Self {
+        println!("passage ErrorResponse");
+        //println!("{:?}", error);
         ErrorResponse {
             errors: vec![error.into()],
         }
@@ -66,6 +74,8 @@ impl From<&String> for ErrorResponse {
 /// Utility to make transforming a vector of strings into an ErrorResponse
 impl From<Vec<String>> for ErrorResponse {
     fn from(errors: Vec<String>) -> Self {
+        println!("passage ErrorResponse 2");
+        //println!("{:?}", error);
         ErrorResponse { errors }
     }
 }
@@ -73,11 +83,17 @@ impl From<Vec<String>> for ErrorResponse {
 /// Convert DBErrors to ApiErrors
 impl From<DBError> for ApiError {
     fn from(error: DBError) -> ApiError {
+        println!("passage DBError");
+        println!("{:?}", error);
         // Right now we just care about UniqueViolation from diesel
         // But this would be helpful to easily map errors as our app grows
         match error {
             DBError::DatabaseError(kind, info) => {
                 if let DatabaseErrorKind::UniqueViolation = kind {
+                    let message = info.details().unwrap_or_else(|| info.message()).to_string();
+                    return ApiError::BadRequest(message);
+                }
+                if let DatabaseErrorKind::ForeignKeyViolation = kind {
                     let message = info.details().unwrap_or_else(|| info.message()).to_string();
                     return ApiError::BadRequest(message);
                 }
