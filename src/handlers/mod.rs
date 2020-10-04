@@ -5,3 +5,4 @@ pub mod family;
 pub mod place;
 pub mod subscription;
 pub mod event;
+pub mod geoloc;

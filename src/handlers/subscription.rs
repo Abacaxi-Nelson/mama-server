@@ -1,13 +1,15 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::subscription::{get_all_by_family_id_and_user_id_and_days, get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
+use crate::models::subscription::{ get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
 use uuid::Uuid;
 use validator::Validate;
 use rayon::prelude::*;
+use super::event::{EventResponse, EventsResponse};
+use crate::models::event::Event;
 
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -124,13 +126,14 @@ pub struct PathByFamilyIDUserIDDays {
     user_id: Uuid,
     days: String,
 }
-
-pub async fn get_subscriptions_by_family_id_and_user_id_and_days(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsResponse>, ApiError> {
+/*
+pub async fn get_subscriptions_by_family_id_and_user_id_and_days(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsEventResponse>, ApiError> {
     println!("get_subscriptions_by_family_id_and_user_id_and_days");
     let subscriptions = block(move || get_all_by_family_id_and_user_id_and_days(&pool, path.family_id, path.user_id, &path.days)).await?;
     println!("get_subscriptions_by_family_id_and_user_id_and_days 2");
     respond_json(subscriptions)
 }
+*/
 
 pub async fn create_subscription(
     pool: Data<PoolType>,
@@ -201,3 +204,47 @@ impl From<Vec<Subscription>> for SubscriptionsResponse {
         SubscriptionsResponse(subscriptions.into_par_iter().map(|subscription| subscription.into()).collect())
     }
 }
+/*
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct SubscriptionEventResponse {
+    pub s: Subscription,
+    pub e: Event
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct SubscriptionsEventResponse(pub Vec<SubscriptionEventResponse>);
+
+impl From<(Subscription, Event)> for SubscriptionEventResponse {
+    fn from((subscription, event): (Subscription, Event)) -> Self {
+        (
+            SubscriptionResponse {
+                id: Uuid::parse_str(&subscription.id).unwrap(),
+                family_id: Uuid::parse_str(&subscription.family_id).unwrap(),
+                user_id: Uuid::parse_str(&subscription.user_id).unwrap(),
+                place_id: Uuid::parse_str(&subscription.place_id).unwrap(),
+                days: subscription.days.to_string(),
+            },
+            EventResponse {
+                id: Uuid::parse_str(&event.id).unwrap(),
+                family_id: Uuid::parse_str(&event.family_id).unwrap(),
+                subscription_id: Uuid::parse_str(&event.subscription_id).unwrap(),
+                place_id: Uuid::parse_str(&event.place_id).unwrap(),
+                user_id: Uuid::parse_str(&event.user_id).unwrap(),
+                day: event.day.to_string(),
+                message: event.message.to_string()
+            }
+        )
+    }
+}
+
+impl From<Vec<(Subscription, Event)>> for SubscriptionsEventResponse {
+    fn from((subscriptions, events): Vec<(Subscription, Event)>) -> Self {
+        (
+            SubscriptionsEventResponse(subscriptions.into_par_iter().map(|subscription| subscription.into()).collect())
+            ,
+            EventsResponse(events.into_par_iter().map(|event| event.into()).collect())
+        )
+    }
+}
+*/

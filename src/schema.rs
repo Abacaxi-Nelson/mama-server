@@ -27,6 +27,16 @@ table! {
 }
 
 table! {
+    geolocs (id) {
+        id -> Varchar,
+        user_id -> Varchar,
+        latitude -> Float8,
+        longitude -> Float8,
+        created_at -> Timestamp,
+    }
+}
+
+table! {
     places (id) {
         id -> Varchar,
         name -> Varchar,
@@ -72,6 +82,7 @@ joinable!(events -> families (family_id));
 joinable!(events -> places (place_id));
 joinable!(events -> subscriptions (subscription_id));
 joinable!(events -> users (user_id));
+joinable!(geolocs -> users (user_id));
 joinable!(places -> families (family_id));
 joinable!(subscriptions -> families (family_id));
 joinable!(subscriptions -> places (place_id));
@@ -81,6 +92,7 @@ joinable!(users -> families (family_id));
 allow_tables_to_appear_in_same_query!(
     events,
     families,
+    geolocs,
     places,
     subscriptions,
     users,

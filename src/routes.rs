@@ -7,8 +7,9 @@ use crate::handlers::{
     user::{get_users_by_family_id, create_user, delete_user, get_user, get_users, update_user},
     family::{get_family_by_code, create_family, delete_family, get_family, get_families, update_family},
     place::{get_places_by_family_id, create_place, delete_place, get_place, get_places, update_place},
-    subscription::{get_subscriptions_by_family_id_and_user_id_and_days, get_subscriptions_by_family_id_and_place_id,get_subscriptions_by_family_id, create_subscription, delete_subscription, get_subscription, get_subscriptions, update_subscription},
+    subscription::{get_subscriptions_by_family_id_and_place_id,get_subscriptions_by_family_id, create_subscription, delete_subscription, get_subscription, get_subscriptions, update_subscription},
     event::{get_events_by_family_id, create_event, delete_event, get_event, get_events, update_event},
+    geoloc::{get_geolocs_by_day, create_geoloc},
 };
 use crate::middleware::auth::Auth as AuthMiddleware;
 use actix_files::Files;
@@ -68,8 +69,8 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("", web::get().to(get_subscriptions))
                         .route("", web::post().to(create_subscription))
                         .route("search_by_family/{family_id}", web::get().to(get_subscriptions_by_family_id))
-                        .route("search_by_family_place/{family_id}/{place_id}", web::get().to(get_subscriptions_by_family_id_and_place_id))
-                        .route("search_by_family_user_days/{family_id}/{user_id}/{days}", web::get().to(get_subscriptions_by_family_id_and_user_id_and_days)),
+                        .route("search_by_family_place/{family_id}/{place_id}", web::get().to(get_subscriptions_by_family_id_and_place_id)),
+                        //.route("search_by_family_user_days/{family_id}/{user_id}/{days}", web::get().to(get_subscriptions_by_family_id_and_user_id_and_days)),
                 )
                 // Event routes
                 .service(
@@ -80,6 +81,12 @@ pub fn routes(cfg: &mut web::ServiceConfig) {
                         .route("", web::get().to(get_events))
                         .route("", web::post().to(create_event))
                         .route("search_by_family/{family_id}", web::get().to(get_events_by_family_id))
+                )
+                // Geoloc routes
+                .service(
+                    web::scope("/geoloc")
+                        .route("", web::post().to(create_geoloc))
+                        .route("search_by_user_id/{user_id}", web::get().to(get_geolocs_by_day))
                 )
         )
         // Serve secure static files from the static-private folder
