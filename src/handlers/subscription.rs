@@ -1,7 +1,7 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::subscription::{ get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
+use crate::models::subscription::{ get_all_by_family_id_and_user_id_and_days_events, get_all_by_family_id_and_user_id_and_days, get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
@@ -126,14 +126,23 @@ pub struct PathByFamilyIDUserIDDays {
     user_id: Uuid,
     days: String,
 }
-/*
-pub async fn get_subscriptions_by_family_id_and_user_id_and_days(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsEventResponse>, ApiError> {
+
+pub async fn search_by_family_user_days(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsResponse>, ApiError> {
     println!("get_subscriptions_by_family_id_and_user_id_and_days");
     let subscriptions = block(move || get_all_by_family_id_and_user_id_and_days(&pool, path.family_id, path.user_id, &path.days)).await?;
+    println!("subscriptions {:?} ", subscriptions);
     println!("get_subscriptions_by_family_id_and_user_id_and_days 2");
     respond_json(subscriptions)
 }
-*/
+
+pub async fn search_by_family_user_days_events(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsEventResponse>, ApiError> {
+    println!("get_subscriptions_by_family_id_and_user_id_and_days");
+    let subscriptions = block(move || get_all_by_family_id_and_user_id_and_days_events(&pool, path.family_id, path.user_id, &path.days)).await?;
+    println!("subscriptions {:?} ", subscriptions);
+    println!("get_subscriptions_by_family_id_and_user_id_and_days 2");
+    respond_json(subscriptions)
+}
+
 
 pub async fn create_subscription(
     pool: Data<PoolType>,
@@ -204,12 +213,12 @@ impl From<Vec<Subscription>> for SubscriptionsResponse {
         SubscriptionsResponse(subscriptions.into_par_iter().map(|subscription| subscription.into()).collect())
     }
 }
-/*
+
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct SubscriptionEventResponse {
-    pub s: Subscription,
-    pub e: Event
+    pub s: SubscriptionResponse ,
+    pub e: EventResponse 
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -217,15 +226,15 @@ pub struct SubscriptionsEventResponse(pub Vec<SubscriptionEventResponse>);
 
 impl From<(Subscription, Event)> for SubscriptionEventResponse {
     fn from((subscription, event): (Subscription, Event)) -> Self {
-        (
-            SubscriptionResponse {
+        SubscriptionEventResponse{
+            s: SubscriptionResponse {
                 id: Uuid::parse_str(&subscription.id).unwrap(),
                 family_id: Uuid::parse_str(&subscription.family_id).unwrap(),
                 user_id: Uuid::parse_str(&subscription.user_id).unwrap(),
                 place_id: Uuid::parse_str(&subscription.place_id).unwrap(),
                 days: subscription.days.to_string(),
             },
-            EventResponse {
+            e: EventResponse {
                 id: Uuid::parse_str(&event.id).unwrap(),
                 family_id: Uuid::parse_str(&event.family_id).unwrap(),
                 subscription_id: Uuid::parse_str(&event.subscription_id).unwrap(),
@@ -234,17 +243,30 @@ impl From<(Subscription, Event)> for SubscriptionEventResponse {
                 day: event.day.to_string(),
                 message: event.message.to_string()
             }
-        )
+        }
     }
 }
 
 impl From<Vec<(Subscription, Event)>> for SubscriptionsEventResponse {
-    fn from((subscriptions, events): Vec<(Subscription, Event)>) -> Self {
-        (
-            SubscriptionsEventResponse(subscriptions.into_par_iter().map(|subscription| subscription.into()).collect())
-            ,
-            EventsResponse(events.into_par_iter().map(|event| event.into()).collect())
+    fn from(all: Vec<(Subscription, Event)>) -> Self {
+        /*SubscriptionsEventResponse(
+            all.into_par_iter()
+            .map(|subscription, event| 
+                (subscription.into(),event.into())
+            ).collect()
+        )*/
+        SubscriptionsEventResponse(
+            all
+            .iter()
+            .map(
+                |t| 
+                //(t.0.into(),t.1.into())
+                SubscriptionEventResponse{
+                    //s: t.0.into(), e: t.1.into()
+                    s: t.0.clone().into(), e: t.1.clone().into()
+                }
+            )
+            .collect()
         )
     }
 }
-*/

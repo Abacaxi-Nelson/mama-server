@@ -2,10 +2,11 @@ use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::handlers::event::{EventResponse, EventsResponse};
 use crate::schema::events;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{NaiveDateTime, Utc, NaiveDate};
 use diesel::prelude::*;
 use uuid::Uuid;
 use crate::models::subscription::Subscription;
+use diesel::dsl::sql;
 
 
 #[derive(Clone, Debug, Serialize, Associations, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
@@ -17,8 +18,8 @@ pub struct Event {
     pub subscription_id: String,
     pub place_id: String,
     pub user_id: String,
-    pub day: String,
     pub message: String,
+    pub day: String,
     pub created_by: String,
     pub created_at: NaiveDateTime,
     pub updated_by: String,
@@ -74,6 +75,36 @@ pub fn get_all_by_family_id(pool: &PoolType, _family_id: Uuid, _day: &String) ->
     
     println!("passage get_all_by_family_id");
     println!("{:?}", _family_id);
+
+    Ok(all.into())
+}
+
+pub fn get_all_by_family_user_place_sub(
+    pool: &PoolType, 
+    _family_id: Uuid, 
+    _place_id: Uuid, 
+    _user_id: Uuid, 
+    _subscription_id: Uuid, 
+) -> Result<EventsResponse, ApiError> {
+    use crate::schema::events::dsl::*;
+
+    let dt = Utc::now().naive_utc();
+    println!("dt {:?}", dt);
+
+    let conn = pool.get()?;
+    let all: Vec<Event> = events
+        .filter(family_id.eq(_family_id.to_string()))
+        .filter(place_id.eq(_place_id.to_string()))
+        .filter(user_id.eq(_user_id.to_string()))
+        .filter(subscription_id.eq(_subscription_id.to_string()))
+        //.filter(created_at.gt(NaiveDate::from_ymd(dt.year(), dt.month(), dt.day()).and_hms(0, 0, 0)))
+        .filter(sql(r#""events"."created_at" > CURRENT_DATE + interval '1 hour'"#))
+        .load(&conn)?;
+
+        println!("**********************************");
+        println!("get_all_by_family_user_place_sub");
+        println!("all{:?}", all);
+        println!("**********************************");
 
     Ok(all.into())
 }

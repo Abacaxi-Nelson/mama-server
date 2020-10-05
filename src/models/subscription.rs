@@ -1,13 +1,12 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
-use crate::handlers::subscription::{SubscriptionResponse, SubscriptionsResponse};
+use crate::handlers::subscription::{SubscriptionsEventResponse, SubscriptionResponse, SubscriptionsResponse};
 use crate::schema::subscriptions;
-//use crate::schema::events;
-
+use crate::schema::events;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
-//use crate::models::event::Event;
+use crate::models::event::Event;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
 pub struct Subscription {
@@ -77,10 +76,9 @@ pub fn get_all_by_family_id(pool: &PoolType, _family_id: Uuid) -> Result<Subscri
     Ok(all.into())
 }
 
-/*
-pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uuid, _user_id: Uuid, _days: &String) -> Result<SubscriptionsEventResponse, ApiError> {
+pub fn get_all_by_family_id_and_user_id_and_days_events(pool: &PoolType, _family_id: Uuid, _user_id: Uuid, _days: &String) -> Result<SubscriptionsEventResponse, ApiError> {
     use crate::schema::subscriptions::dsl::*;
-    println!("passage get_all_by_family_id_and_user_id_and_days");
+    println!("passage get_all_by_family_id_and_user_id_and_days_events");
     println!("_family_id {:?} _user_id {:?} _days {:?}", _family_id, _user_id, _days);
     println!("===========================");
 
@@ -93,13 +91,18 @@ pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uu
 
     println!("day {:?} ", day);
 
-    /*
-    let all = subscriptions
+    let mut day2 = "%".to_string();
+    let d2 = "%".to_string();
+    day2.push_str(_days);
+    day2.push_str(&d2);
+
+    
+    let all2: Vec<Subscription> = subscriptions
         .filter(family_id.eq(_family_id.to_string()))
         .filter(user_id.eq(_user_id.to_string()))
-        .filter(days.like(day))
+        .filter(days.like(day2))
         .load(&conn)?;
-    */
+    println!("all2 {:?} ", all2);
 
     let all: Vec<(Subscription, Event)> = subscriptions
         .filter(family_id.eq(_family_id.to_string()))
@@ -112,7 +115,31 @@ pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uu
 
     Ok(all.into())
 }
-*/
+
+pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uuid, _user_id: Uuid, _days: &String) -> Result<SubscriptionsResponse, ApiError> {
+    use crate::schema::subscriptions::dsl::*;
+    println!("passage get_all_by_family_id_and_user_id_and_days");
+    println!("_family_id {:?} _user_id {:?} _days {:?}", _family_id, _user_id, _days);
+    println!("===========================");
+
+    let conn = pool.get()?;
+
+    let mut day = "%".to_string();
+    let d = "%".to_string();
+    day.push_str(_days);
+    day.push_str(&d);
+    
+    let all: Vec<Subscription> = subscriptions
+        .filter(family_id.eq(_family_id.to_string()))
+        .filter(user_id.eq(_user_id.to_string()))
+        .filter(days.like(day.clone()))
+        .load(&conn)?;
+
+    //0011000
+
+    Ok(all.into())
+}
+
 
 pub fn find(pool: &PoolType, subscription_id: Uuid) -> Result<SubscriptionResponse, ApiError> {
     use crate::schema::subscriptions::dsl::{id, subscriptions};

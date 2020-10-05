@@ -1,7 +1,7 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::event::{ create, delete, find, get_all_by_family_id, get_all, update, NewEvent, UpdateEvent, Event};
+use crate::models::event::{ get_all_by_family_user_place_sub, create, delete, find, get_all_by_family_id, get_all, update, NewEvent, UpdateEvent, Event};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
@@ -126,6 +126,19 @@ pub async fn get_events_by_family_id(path: Path<PathByFamilyID>, pool: Data<Pool
     respond_json(events)
 }
 
+#[derive(Deserialize)]
+pub struct PathByFamilyPlaceUserSub {
+    family_id: Uuid,
+    subscription_id: Uuid,
+    place_id: Uuid,
+    user_id: Uuid,
+}
+
+pub async fn get_events_by_family_place_user_user(path: Path<PathByFamilyPlaceUserSub>, pool: Data<PoolType>) -> Result<Json<EventsResponse>, ApiError> {
+    let events = block(move || get_all_by_family_user_place_sub(&pool, path.family_id, path.place_id, path.user_id, path.subscription_id)).await?;
+    println!("events {:?}", events);
+    respond_json(events)
+}
 
 pub async fn create_event(
     pool: Data<PoolType>,
@@ -185,6 +198,11 @@ pub async fn delete_event(
 
 impl From<Event> for EventResponse {
     fn from(event: Event) -> Self {
+        println!("//////////////////////////////");
+        println!("EventResponse");
+        println!("event.day {:?}", event.day);
+        println!("event.message {:?}", event.message);
+        println!("//////////////////////////////");
         EventResponse {
             id: Uuid::parse_str(&event.id).unwrap(),
             subscription_id: Uuid::parse_str(&event.subscription_id).unwrap(),
