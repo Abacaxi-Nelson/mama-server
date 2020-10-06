@@ -41,6 +41,8 @@ pub fn find_today(pool: &PoolType, _user_id: Uuid) -> Result<GeolocsResponse, Ap
     let conn = pool.get()?;
     let geoloc = geolocs
         .filter(user_id.eq(_user_id.to_string()))
+        .filter(sql(r#""geolocs"."created_at" > CURRENT_DATE + interval '1 hour'"#))
+        .order(created_at.desc())
         //.first::<Geoloc>(&conn)
         .load(&conn)?;
 

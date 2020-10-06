@@ -1,21 +1,27 @@
-ARG BASE_IMAGE=ekidd/rust-musl-builder:latest
+FROM rust:1.42 as builder
+WORKDIR /usr/src/mama-server
+COPY . .
 
-# Our first FROM statement declares the build environment.
-FROM ${BASE_IMAGE} AS builder
+RUN echo $(ls -1 /usr/src/mama-server)
+RUN echo $(ls -1 /usr/src/mama-server/src)
 
-# Add our source code.
-ADD . ./
+RUN apt-get update && \
+    apt-get install -y libpq-dev libmariadb-dev-compat libmariadb-dev sqlite3
 
-# Fix permissions on source code.
-RUN sudo chown -R rust:rust /home/rust
+RUN cargo install --path .
 
-# Build our application.
-RUN cargo build --release
+FROM debian:buster-slim
+RUN apt-get update && \
+    apt-get install -y libpq-dev libmariadb-dev-compat libmariadb-dev sqlite3
 
-# Now, we need to build our _real_ Docker container, copying in `rust-actix-example`.
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-COPY --from=builder \
-    /home/rust/src/target/x86_64-unknown-linux-musl/release/rust-actix-example \
-    /usr/local/bin/
-CMD /usr/local/bin/rust-actix-example
+COPY --from=builder /usr/local/cargo/bin/mama-server /usr/local/bin/mama-server
+
+RUN echo $(ls -1 /usr/local/bin/mama-server)
+
+CMD ["mama-server"]
+
+
+
+
+
+
