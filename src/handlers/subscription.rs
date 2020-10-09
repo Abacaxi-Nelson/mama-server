@@ -1,7 +1,7 @@
 use crate::database::PoolType;
 use crate::errors::ApiError;
 use crate::helpers::{respond_json, respond_ok};
-use crate::models::subscription::{ get_all_by_family_id_and_user_id_and_days_events, get_all_by_family_id_and_user_id_and_days, get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
+use crate::models::subscription::{ get_all_by_family_id_and_user_id_and_days_without_user, get_all_by_family_id_and_user_id_and_days_events, get_all_by_family_id_and_user_id_and_days, get_all_by_family_id_and_place_id, create, delete, find, get_all_by_family_id, get_all, update, NewSubscription, UpdateSubscription, Subscription};
 use crate::validate::validate;
 use actix_web::web::{block, Data, HttpResponse, Json, Path};
 use serde::Serialize;
@@ -134,6 +134,23 @@ pub async fn search_by_family_user_days(path: Path<PathByFamilyIDUserIDDays>, po
     println!("get_subscriptions_by_family_id_and_user_id_and_days 2");
     respond_json(subscriptions)
 }
+
+#[derive(Deserialize)]
+pub struct 
+PathByFamilyIDUserIDDays2 {
+    family_id: Uuid,
+    days: String,
+}
+
+pub async fn search_by_family_user_days_without_user(path: Path<PathByFamilyIDUserIDDays2>, pool: Data<PoolType>) -> Result<Json<SubscriptionsResponse>, ApiError> {
+    println!("get_all_by_family_id_and_user_id_and_days_without_user");
+    let subscriptions = block(move || get_all_by_family_id_and_user_id_and_days_without_user(&pool, path.family_id, &path.days)).await?;
+    println!("subscriptions {:?} ", subscriptions);
+    println!("get_all_by_family_id_and_user_id_and_days_without_user 2");
+    respond_json(subscriptions)
+}
+
+
 
 pub async fn search_by_family_user_days_events(path: Path<PathByFamilyIDUserIDDays>, pool: Data<PoolType>) -> Result<Json<SubscriptionsEventResponse>, ApiError> {
     println!("get_subscriptions_by_family_id_and_user_id_and_days");

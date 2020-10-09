@@ -5,6 +5,8 @@ use crate::schema::geolocs;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
+use diesel::dsl::sql;
+
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Queryable, Identifiable, Insertable)]
 #[table_name = "geolocs"]

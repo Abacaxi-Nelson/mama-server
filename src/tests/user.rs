@@ -26,6 +26,7 @@ mod tests {
             last_name: "Nakamoto".into(),
             email: "satoshi@nakamotoinstitute.org".into(),
             password: "123456".into(),
+            token: "123456".into(),
         };
         assert_post(PATH, params).await;
     }

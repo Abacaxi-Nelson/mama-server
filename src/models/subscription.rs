@@ -129,13 +129,36 @@ pub fn get_all_by_family_id_and_user_id_and_days(pool: &PoolType, _family_id: Uu
     day.push_str(_days);
     day.push_str(&d);
     
+    
+
     let all: Vec<Subscription> = subscriptions
         .filter(family_id.eq(_family_id.to_string()))
         .filter(user_id.eq(_user_id.to_string()))
         .filter(days.like(day.clone()))
         .load(&conn)?;
 
-    //0011000
+    Ok(all.into())
+}
+
+pub fn get_all_by_family_id_and_user_id_and_days_without_user(pool: &PoolType, _family_id: Uuid, _days: &String) -> Result<SubscriptionsResponse, ApiError> {
+    use crate::schema::subscriptions::dsl::*;
+    println!("passage get_all_by_family_id_and_user_id_and_days");
+    println!("_family_id {:?}  _days {:?}", _family_id, _days);
+    println!("===========================");
+
+    let conn = pool.get()?;
+
+    let mut day = "%".to_string();
+    let d = "%".to_string();
+    day.push_str(_days);
+    day.push_str(&d);
+    
+    
+
+    let all: Vec<Subscription> = subscriptions
+        .filter(family_id.eq(_family_id.to_string()))
+        .filter(days.like(day.clone()))
+        .load(&conn)?;
 
     Ok(all.into())
 }

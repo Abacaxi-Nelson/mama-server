@@ -107,6 +107,7 @@ impl From<DBError> for ApiError {
 /// Convert PoolErrors to ApiErrors
 impl From<PoolError> for ApiError {
     fn from(error: PoolError) -> ApiError {
+        println!("passage 1");
         ApiError::PoolError(error.to_string())
     }
 }
@@ -114,6 +115,7 @@ impl From<PoolError> for ApiError {
 /// Convert ParseErrors to ApiErrors
 impl From<ParseError> for ApiError {
     fn from(error: ParseError) -> ApiError {
+        println!("passage 2");
         ApiError::ParseError(error.to_string())
     }
 }
@@ -121,6 +123,7 @@ impl From<ParseError> for ApiError {
 /// Convert Thread BlockingErrors to ApiErrors
 impl From<BlockingError<ApiError>> for ApiError {
     fn from(error: BlockingError<ApiError>) -> ApiError {
+        println!("passage 3");
         match error {
             BlockingError::Error(api_error) => api_error,
             BlockingError::Canceled => ApiError::BlockingError("Thread blocking error".into()),

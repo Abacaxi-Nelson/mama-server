@@ -27,8 +27,12 @@ mod server;
 mod state;
 mod tests;
 mod validate;
+mod scheduling;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    //scheduling
+    //scheduling::schedule(); 
+
     server().await
 }

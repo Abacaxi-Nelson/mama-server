@@ -20,6 +20,7 @@ pub struct User {
     pub updated_at: NaiveDateTime,
     pub family_id: Option<String>,
     pub role: Option<String>,
+    pub token: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -31,6 +32,7 @@ pub struct NewUser {
     pub password: String,
     pub created_by: String,
     pub updated_by: String,
+    pub token: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, AsChangeset)]
@@ -43,6 +45,7 @@ pub struct UpdateUser {
     pub updated_by: String,
     pub family_id: Option<String>,
     pub role: Option<String>,
+    pub token: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -95,7 +98,6 @@ pub fn find_by_auth(
     user_password: &str,
 ) -> Result<UserResponse, ApiError> {
     use crate::schema::users::dsl::{email, password, users};
-
     let conn = pool.get()?;
     let user = users
         .filter(email.eq(user_email.to_string()))
@@ -150,7 +152,8 @@ impl From<NewUser> for User {
             updated_by: user.updated_by,
             updated_at: Utc::now().naive_utc(),
             family_id: None,
-            role: None
+            role: None,
+            token: user.token
         }
     }
 }

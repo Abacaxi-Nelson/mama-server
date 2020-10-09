@@ -21,7 +21,6 @@ pub struct LoginRequest {
     ))]
     pub password: String,
 }
-
 /// Login a user
 /// Create and remember their JWT
 pub async fn login(

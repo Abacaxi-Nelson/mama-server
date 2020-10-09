@@ -75,6 +75,7 @@ table! {
         updated_at -> Timestamp,
         family_id -> Nullable<Varchar>,
         role -> Nullable<Varchar>,
+        token -> Varchar,
     }
 }
 

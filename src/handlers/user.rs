@@ -17,6 +17,7 @@ pub struct UserResponse {
     pub email: String,
     pub family_id: Option<String>,
     pub role: Option<String>,
+    pub token: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -44,6 +45,12 @@ pub struct CreateUserRequest {
         message = "password is required and must be at least 6 characters"
     ))]
     pub password: String,
+
+    #[validate(length(
+        min = 6,
+        message = "token is required and must be at least 6 characters"
+    ))]
+    pub token: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
@@ -65,6 +72,12 @@ pub struct UpdateUserRequest {
 
     pub role: Option<String>,
     pub family_id: Option<String>,
+
+    #[validate(length(
+        min = 6,
+        message = "token is required and must be at least 6 characters"
+    ))]
+    pub token: String,
 }
 
 /// Get a user
@@ -113,6 +126,7 @@ pub async fn create_user(
         password: params.password.to_string(),
         created_by: user_id.to_string(),
         updated_by: user_id.to_string(),
+        token: params.token.to_string(),
     }
     .into();
     let user = block(move || create(&pool, &new_user)).await?;
@@ -137,6 +151,7 @@ pub async fn update_user(
         updated_by: user_id.to_string(),
         family_id: params.family_id.clone(),
         role: params.role.clone(),
+        token: params.token.clone(),
     };
     let user = block(move || update(&pool, &update_user)).await?;
     respond_json(user.into())
@@ -160,6 +175,7 @@ impl From<User> for UserResponse {
             email: user.email.to_string(),
             role: user.role,
             family_id: user.family_id,
+            token: user.token,
         }
     }
 }
